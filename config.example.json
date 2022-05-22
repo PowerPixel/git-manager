@@ -1,9 +1,9 @@
-{   "default": "powerpixel",
+{   
+    "default": "powerpixel",
     "profiles": [
         {
             "name": "powerpixel",
             "config": {
-                "ssh_key": "~/.ssh/github_powerpixel",
                 "comment": "Configuring local repository %repository_name%...", 
                 "user": {
                     "name": "powerpixel",
@@ -13,8 +13,15 @@
             "git_args": []
         },
         {
-            "name": "dohoum"
+            "name": "dohoum",
+            "config": {
+                "ssh_key": "~/.ssh/github_dohoum",
+                "comment": "Configuring local repository %repository_name%...", 
+                "user": {
+                    "name": "dohoum",
+                    "email": "medhy.dohou@example.com"
+                }
+            }
         }
     ]
-    
 }
