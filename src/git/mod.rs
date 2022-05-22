@@ -1,11 +1,16 @@
-use git2::build::RepoBuilder;
+use git2::{build::RepoBuilder, FetchOptions};
 use std::{collections::HashMap, path::Path};
+use crate::log_utils::exit_abnormally;
 
-use crate::cli::exit_abnormally;
-fn clone_repository(path: &str, url: &str, path_to_ssh_key: &str) {
-    match RepoBuilder::new().clone(url, &Path::new(path)) {
+const URL_REGEX: &str = r"/(https|.*@.*):(\/\/.+?\/)?(.*).git/gm";
+
+
+pub fn clone_repository(path: &str, url: &str, path_to_ssh_key: &str) {
+
+    // TODO : Create repo and use ssh key 
+    match RepoBuilder::new().fetch_options(FetchOptions::new()).clone(url, &Path::new(path)) {
         Ok(repo) => {},
-        Err(err) => exit_abnormally("")
+        Err(err) => exit_abnormally(&format!("could not clone repo"))
     };
 }
 

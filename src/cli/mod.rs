@@ -1,4 +1,4 @@
-use crate::{config::{Config, ConfigFile}, git};
+use crate::{config::{Config, ConfigFile}, git, log_utils::exit_abnormally};
 
 use clap::{Arg, Command};
 use std::{fs::File, io::BufReader, path::Path};
@@ -92,20 +92,18 @@ pub fn cli_bootstrap() {
                 }
             };
 
-            match &(config.ssh_key) {
-                Some(ssh_key_path) => {},
-                None => {}
-            }
+            let ssh_key_path: &str = match &(config.ssh_key) {
+                Some(ssh_key_path) => ssh_key_path.as_str(),
+                None => {
+                    exit_abnormally("Error while parsing ssh key path");
+                    unreachable!();
+                }
+            };
             
-            //git::clone_repository(path, url,);
+            git::clone_repository(path, url, ssh_key_path);
         },
         _ => unreachable!()
     }
-}
-
-pub fn exit_abnormally(error_message: &str) {
-    eprintln!("ERROR : {}", error_message);
-    std::process::exit(1);
 }
 
 fn load_config<'a>(config_file: &'a ConfigFile, profile_name: &str) -> &'a Config {
