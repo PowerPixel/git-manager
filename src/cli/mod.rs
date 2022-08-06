@@ -1,9 +1,17 @@
-use crate::{config::{Config, ConfigFile}, git, log_utils::exit_abnormally};
+use crate::{
+    config::{Config, ConfigFile},
+    git,
+    log_utils::exit_abnormally,
+};
 
 use clap::{Arg, Command};
-use std::{fs::File, io::BufReader, path::Path};
+use std::{
+    fs::File,
+    io::BufReader,
+    path::{Path, PathBuf},
+};
 
-const DEFAULT_CONFIG_PATH: &str = "~/.config/git-manager/config.json";
+const DEFAULT_CONFIG_PATH: &str = "~/.config/gitpm/config.json";
 
 pub fn cli_bootstrap() {
     let cmd = Command::new("gitpm")
@@ -42,12 +50,17 @@ pub fn cli_bootstrap() {
         )
         .get_matches();
 
-    let config_path: &Path = match cmd.value_of("config-path") {
-        Some(config_path) => Path::new(config_path),
-        None => Path::new(DEFAULT_CONFIG_PATH),
+    let config_path: PathBuf = match cmd.value_of("config-path") {
+        Some(path) => Path::new(shellexpand::tilde(path).into_owned().as_str()).to_owned(),
+        None => Path::new(
+            shellexpand::tilde(DEFAULT_CONFIG_PATH)
+                .into_owned()
+                .as_str(),
+        )
+        .to_owned(),
     };
 
-    let file: File = match File::open(config_path) {
+    let file: File = match File::open(config_path.as_path()) {
         Ok(f) => f,
         Err(err) => {
             exit_abnormally(&format!(
@@ -70,7 +83,7 @@ pub fn cli_bootstrap() {
 
     let profile_name: &str = match cmd.value_of("profile") {
         Some(p) => p,
-        None => config_file.default.as_str()
+        None => config_file.default.as_str(),
     };
 
     println!("selected profile : {}", profile_name);
@@ -94,21 +107,17 @@ pub fn cli_bootstrap() {
 
             let ssh_key_path: &str = match &(config.ssh_key) {
                 Some(ssh_key_path) => ssh_key_path.as_str(),
-                None => {
-                    exit_abnormally("Error while parsing ssh key path");
-                    unreachable!();
-                }
+                None => "",
             };
-            
+
             git::clone_repository(path, url, ssh_key_path);
-        },
-        _ => unreachable!()
+        }
+        _ => unreachable!(),
     }
 }
 
 fn load_config<'a>(config_file: &'a ConfigFile, profile_name: &str) -> &'a Config {
-    match config_file.profiles.iter().find(|p| p.name == profile_name)
-    {
+    match config_file.profiles.iter().find(|p| p.name == profile_name) {
         Some(p) => &p.config,
         None => {
             exit_abnormally(&format!("cannot find profile {}!", profile_name));
